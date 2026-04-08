@@ -1,0 +1,376 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>스마트 체크 스도쿠 - 키보드 지원</title>
+    <style>
+      :root {
+        --user-color: #007bff;
+        --fixed-color: #333333;
+        --error-color: #ff0000;
+        --bg-color: #f8f9fa;
+        --border-heavy: 3px solid #000;
+        --border-light: 1px solid #ccc;
+      }
+
+      body {
+        font-family: "Malgun Gothic", sans-serif;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        margin: 0;
+        background-color: var(--bg-color);
+      }
+
+      .container {
+        background: white;
+        padding: 25px;
+        border-radius: 12px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        text-align: center;
+        width: 400px;
+      }
+
+      .header h1 {
+        margin: 0 0 10px 0;
+        font-size: 24px;
+      }
+      .difficulty-btns {
+        display: flex;
+        gap: 8px;
+        justify-content: center;
+        margin-bottom: 15px;
+      }
+
+      .btn {
+        padding: 8px 15px;
+        border: 1px solid #ddd;
+        background: #eee;
+        border-radius: 5px;
+        cursor: pointer;
+        font-weight: bold;
+      }
+      .btn.active {
+        background: #666;
+        color: white;
+      }
+
+      .sudoku-grid {
+        display: grid;
+        grid-template-columns: repeat(
+          9,
+          42px
+        ); /* 1fr 대신 고정 크기를 주면 더 정확합니다 */
+        border: var(--border-heavy);
+        margin: 0 auto 15px auto; /* 좌우 마진 auto로 중앙 정렬 */
+        width: fit-content;
+      }
+
+      .cell {
+        width: 42px;
+        height: 42px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 18px;
+        border: var(--border-light);
+        cursor: pointer;
+        box-sizing: border-box;
+        background: #fff;
+      }
+
+      .cell:nth-child(3n) {
+        border-right: var(--border-heavy);
+      }
+      .cell:nth-child(9n) {
+        border-right: var(--border-light);
+      }
+      .cell:nth-child(n + 19):nth-child(-n + 27),
+      .cell:nth-child(n + 46):nth-child(-n + 54) {
+        border-bottom: var(--border-heavy);
+      }
+
+      .cell.fixed {
+        font-weight: bold;
+        color: var(--fixed-color);
+        background: #f0f0f0;
+        cursor: default;
+      }
+      .cell.user-input {
+        color: var(--user-color);
+        font-weight: bold;
+      }
+      .cell.selected {
+        background-color: #e3f2fd !important;
+        outline: 2px solid var(--user-color);
+        z-index: 1;
+      }
+      .cell.error {
+        color: var(--error-color) !important;
+        background-color: #ffebee;
+      }
+
+      .action-btns {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 5px;
+        margin-bottom: 15px;
+      }
+      .numpad {
+        display: grid;
+        grid-template-columns: repeat(9, 1fr);
+        gap: 4px;
+        width: 100%; /* 부모(container) 너비에 맞춤 */
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>스도쿠</h1>
+        <p id="diff-label">난이도: 보통</p>
+      </div>
+
+      <div class="difficulty-btns">
+        <button class="btn" onclick="newGame('쉬움', this)">쉬움</button>
+        <button class="btn active" onclick="newGame('보통', this)">보통</button>
+        <button class="btn" onclick="newGame('어려움', this)">어려움</button>
+      </div>
+
+      <div class="sudoku-grid" id="grid"></div>
+
+      <div class="action-btns">
+        <button class="btn" onclick="useHint()" id="hint-btn">힌트 (3)</button>
+        <button class="btn" onclick="checkErrors()">오류체크</button>
+        <button class="btn" onclick="submitAnswer()">정답제출</button>
+      </div>
+
+      <div class="numpad">
+        <script>
+          for (let i = 1; i <= 9; i++) {
+            document.write(
+              `<button class="btn" onclick="inputNumber(${i})">${i}</button>`,
+            );
+          }
+        </script>
+      </div>
+      <p style="font-size: 12px; color: #888; margin-top: 10px">
+        * 칸 선택 후 키패드나 Backspace 키를 사용하세요.
+      </p>
+    </div>
+
+    <script>
+      let solution = [];
+      let displayBoard = [];
+      let initialBoard = [];
+      let selectedCell = { r: -1, c: -1 };
+      let hintsLeft = 3;
+
+      // --- 키보드 이벤트 리스너 추가 ---
+      window.addEventListener("keydown", (e) => {
+        if (selectedCell.r === -1) return;
+
+        // Backspace 또는 Delete 키를 눌렀을 때
+        if (e.key === "Backspace" || e.key === "Delete") {
+          deleteNumber();
+        }
+        // 숫자 키 (1-9)를 눌렀을 때 바로 입력되게 함 (보너스 기능)
+        else if (e.key >= "1" && e.key <= "9") {
+          inputNumber(parseInt(e.key));
+        }
+      });
+
+      function generateSudoku() {
+        let board = Array.from({ length: 9 }, () => Array(9).fill(0));
+        solve(board);
+        solution = board.map((row) => [...row]);
+        return board;
+      }
+
+      function solve(board) {
+        for (let r = 0; r < 9; r++) {
+          for (let c = 0; c < 9; c++) {
+            if (board[r][c] === 0) {
+              let nums = [1, 2, 3, 4, 5, 6, 7, 8, 9].sort(
+                () => Math.random() - 0.5,
+              );
+              for (let n of nums) {
+                if (checkValid(board, r, c, n)) {
+                  board[r][c] = n;
+                  if (solve(board)) return true;
+                  board[r][c] = 0;
+                }
+              }
+              return false;
+            }
+          }
+        }
+        return true;
+      }
+
+      function checkValid(board, r, c, n) {
+        for (let i = 0; i < 9; i++) {
+          if (board[r][i] === n || board[i][c] === n) return false;
+        }
+        let rr = Math.floor(r / 3) * 3,
+          cc = Math.floor(c / 3) * 3;
+        for (let i = 0; i < 3; i++) {
+          for (let j = 0; j < 3; j++) {
+            if (board[rr + i][cc + j] === n) return false;
+          }
+        }
+        return true;
+      }
+
+      function pokeHoles(board, count) {
+        let holes = 81 - count;
+        while (holes > 0) {
+          let r = Math.floor(Math.random() * 9),
+            c = Math.floor(Math.random() * 9);
+          if (board[r][c] !== 0) {
+            board[r][c] = 0;
+            holes--;
+          }
+        }
+      }
+
+      function newGame(diff, btn) {
+        document
+          .querySelectorAll(".difficulty-btns .btn")
+          .forEach((b) => b.classList.remove("active"));
+        if (btn) btn.classList.add("active");
+        document.getElementById("diff-label").innerText = `난이도: ${diff}`;
+
+        let clueCount = diff === "쉬움" ? 40 : diff === "보통" ? 30 : 20;
+        let fullBoard = generateSudoku();
+        pokeHoles(fullBoard, clueCount);
+
+        initialBoard = fullBoard.map((row) => [...row]);
+        displayBoard = fullBoard.map((row) => [...row]);
+        hintsLeft = 3;
+        updateHintBtn();
+        render();
+      }
+
+      function render() {
+        const grid = document.getElementById("grid");
+        grid.innerHTML = "";
+        for (let r = 0; r < 9; r++) {
+          for (let c = 0; c < 9; c++) {
+            const cell = document.createElement("div");
+            cell.className = "cell";
+            cell.id = `cell-${r}-${c}`;
+
+            if (initialBoard[r][c] !== 0) {
+              cell.innerText = initialBoard[r][c];
+              cell.classList.add("fixed");
+            } else {
+              if (displayBoard[r][c] !== 0) {
+                cell.innerText = displayBoard[r][c];
+                cell.classList.add("user-input");
+              }
+              cell.onclick = () => selectCell(r, c, cell);
+            }
+            grid.appendChild(cell);
+          }
+        }
+      }
+
+      function selectCell(r, c, el) {
+        document
+          .querySelectorAll(".cell")
+          .forEach((cell) => cell.classList.remove("selected"));
+        selectedCell = { r, c };
+        el.classList.add("selected");
+        clearErrors();
+      }
+
+      function inputNumber(n) {
+        if (selectedCell.r === -1) return;
+        displayBoard[selectedCell.r][selectedCell.c] = n;
+        render();
+        document
+          .getElementById(`cell-${selectedCell.r}-${selectedCell.c}`)
+          .classList.add("selected");
+      }
+
+      // --- 숫자 지우기 함수 ---
+      function deleteNumber() {
+        if (selectedCell.r === -1) return;
+        displayBoard[selectedCell.r][selectedCell.c] = 0;
+        render();
+        document
+          .getElementById(`cell-${selectedCell.r}-${selectedCell.c}`)
+          .classList.add("selected");
+      }
+
+      function checkErrors() {
+        clearErrors();
+        let errorFound = false;
+        for (let r = 0; r < 9; r++) {
+          for (let c = 0; c < 9; c++) {
+            let val = displayBoard[r][c];
+            if (val === 0) continue;
+            let isDuplicate = false;
+            for (let i = 0; i < 9; i++)
+              if (i !== c && displayBoard[r][i] === val) isDuplicate = true;
+            for (let i = 0; i < 9; i++)
+              if (i !== r && displayBoard[i][c] === val) isDuplicate = true;
+            let rr = Math.floor(r / 3) * 3,
+              cc = Math.floor(c / 3) * 3;
+            for (let i = 0; i < 3; i++)
+              for (let j = 0; j < 3; j++) {
+                let curR = rr + i,
+                  curC = cc + j;
+                if (
+                  (curR !== r || curC !== c) &&
+                  displayBoard[curR][curC] === val
+                )
+                  isDuplicate = true;
+              }
+            if (isDuplicate && initialBoard[r][c] === 0) {
+              document.getElementById(`cell-${r}-${c}`).classList.add("error");
+              errorFound = true;
+            }
+          }
+        }
+        if (!errorFound) alert("중복된 숫자가 없습니다!");
+      }
+
+      function clearErrors() {
+        document
+          .querySelectorAll(".cell")
+          .forEach((c) => c.classList.remove("error"));
+      }
+
+      function useHint() {
+        if (hintsLeft <= 0 || selectedCell.r === -1) return;
+        displayBoard[selectedCell.r][selectedCell.c] =
+          solution[selectedCell.r][selectedCell.c];
+        hintsLeft--;
+        updateHintBtn();
+        render();
+      }
+
+      function updateHintBtn() {
+        document.getElementById("hint-btn").innerText = `힌트 (${hintsLeft})`;
+      }
+
+      function submitAnswer() {
+        for (let r = 0; r < 9; r++) {
+          for (let c = 0; c < 9; c++) {
+            if (displayBoard[r][c] !== solution[r][c]) {
+              alert("땡~ 다시도전!");
+              return;
+            }
+          }
+        }
+        alert("성공~ 다음 난이도 도전!");
+      }
+
+      newGame("보통");
+    </script>
+  </body>
+</html>

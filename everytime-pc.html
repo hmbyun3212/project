@@ -1,0 +1,867 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>휴먼타임</title>
+    <link rel="stylesheet" href="./everytime.css" />
+    <script src="everytime.js"></script>
+  </head>
+  <body>
+    <!-- AUTH -->
+    <div class="auth-overlay" id="authOverlay">
+      <div class="auth-box">
+        <div class="auth-logo">
+          <h1>휴먼타임</h1>
+          <p>대학생 커뮤니티</p>
+        </div>
+        <div class="auth-tabs">
+          <div class="auth-tab on" onclick="authTab('login')">로그인</div>
+          <div class="auth-tab" onclick="authTab('register')">회원가입</div>
+        </div>
+        <form class="auth-form on" id="loginForm" onsubmit="doLogin(event)">
+          <input type="text" id="loginId" placeholder="아이디" required />
+          <input type="password" id="loginPw" placeholder="비밀번호" required />
+          <div class="auth-err" id="loginErr"></div>
+          <button class="auth-btn" type="submit">로그인</button>
+        </form>
+        <form class="auth-form" id="regForm" onsubmit="doRegister(event)">
+          <div class="form-row-2">
+            <div>
+              <label>아이디</label><br /><input
+                type="text"
+                id="regId"
+                placeholder="아이디"
+                required
+                style="
+                  border: 1px solid #e0e0e0;
+                  border-radius: 8px;
+                  padding: 10px 12px;
+                  font-size: 14px;
+                  width: 100%;
+                  margin-top: 4px;
+                "
+              />
+            </div>
+            <div>
+              <label>비밀번호</label><br /><input
+                type="password"
+                id="regPw"
+                placeholder="비밀번호"
+                required
+                style="
+                  border: 1px solid #e0e0e0;
+                  border-radius: 8px;
+                  padding: 10px 12px;
+                  font-size: 14px;
+                  width: 100%;
+                  margin-top: 4px;
+                "
+              />
+            </div>
+          </div>
+          <input
+            type="text"
+            id="regName"
+            placeholder="닉네임 (선택, 비워두면 자동생성)"
+          />
+          <select id="regSchool">
+            <option value="">대학교 선택 (선택)</option>
+            <option>서울대학교</option>
+            <option>연세대학교</option>
+            <option>고려대학교</option>
+            <option>성균관대학교</option>
+            <option>한양대학교</option>
+            <option>이화여자대학교</option>
+            <option>중앙대학교</option>
+            <option>경희대학교</option>
+            <option>외국어대학교</option>
+            <option>서강대학교</option>
+          </select>
+          <select id="regDept">
+            <option value="">학과 선택 (선택)</option>
+            <option>컴퓨터공학부</option>
+            <option>전기전자공학부</option>
+            <option>경영학과</option>
+            <option>경제학과</option>
+            <option>심리학과</option>
+            <option>영어영문학과</option>
+            <option>수학과</option>
+            <option>물리학과</option>
+            <option>화학과</option>
+            <option>생명과학과</option>
+          </select>
+          <div class="form-row-2">
+            <select id="regYear">
+              <option value="">학번 (선택)</option>
+              <option>20학번</option>
+              <option>21학번</option>
+              <option>22학번</option>
+              <option>23학번</option>
+              <option>24학번</option>
+              <option>25학번</option>
+            </select>
+            <select id="regMbti">
+              <option value="">MBTI (선택)</option>
+              <option>INTJ</option>
+              <option>INTP</option>
+              <option>ENTJ</option>
+              <option>ENTP</option>
+              <option>INFJ</option>
+              <option>INFP</option>
+              <option>ENFJ</option>
+              <option>ENFP</option>
+              <option>ISTJ</option>
+              <option>ISFJ</option>
+              <option>ESTJ</option>
+              <option>ESFJ</option>
+              <option>ISTP</option>
+              <option>ISFP</option>
+              <option>ESTP</option>
+              <option>ESFP</option>
+            </select>
+          </div>
+          <div class="auth-err" id="regErr"></div>
+          <button class="auth-btn" type="submit">회원가입</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- APP -->
+    <div id="app">
+      <div class="top-bar">
+        <div class="top-bar-logo">휴먼타임</div>
+        <div class="top-bar-search">
+          <svg
+            width="16"
+            height="16"
+            fill="none"
+            stroke="#fff"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+          >
+            <circle cx="11" cy="11" r="8" />
+            <path d="m21 21-4.35-4.35" />
+          </svg>
+          <input type="text" placeholder="검색어를 입력하세요" />
+        </div>
+        <div class="top-bar-right">
+          <div class="top-user" onclick="goScreen('profile')">
+            <div class="top-user-avatar" id="topAvatar">익</div>
+            <span id="topName">익명의 판다</span>
+          </div>
+          <button
+            class="top-logout"
+            onclick="resetDB()"
+            style="
+              border-color: rgba(255, 255, 255, 0.3);
+              color: rgba(255, 255, 255, 0.7);
+            "
+          >
+            DB 초기화
+          </button>
+          <button class="top-logout" onclick="doLogout()">로그아웃</button>
+        </div>
+      </div>
+      <div class="layout">
+        <div class="sidebar">
+          <div class="sidebar-school">
+            <h3 id="sideSchool">서울대학교</h3>
+            <p id="sideDept">컴퓨터공학부</p>
+          </div>
+          <div class="nav-section">
+            <div class="nav-label">학교생활</div>
+            <div class="nav-item active" onclick="goScreen('tt')">
+              <svg
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+                viewBox="0 0 24 24"
+              >
+                <rect x="3" y="3" width="18" height="18" rx="2" />
+                <path d="M3 9h18M9 21V9" /></svg
+              >시간표
+            </div>
+            <div class="nav-item" onclick="goScreen('board')">
+              <svg
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"
+                /></svg
+              >게시판
+              <span class="nav-badge" id="boardBadge" style="display: none"
+                >N</span
+              >
+            </div>
+            <div class="nav-item" onclick="goScreen('review')">
+              <svg
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
+                /></svg
+              >강의평가
+            </div>
+            <div class="nav-item" onclick="goScreen('msg')">
+              <svg
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"
+                />
+                <polyline points="22,6 12,13 2,6" /></svg
+              >쪽지
+              <span
+                class="nav-badge"
+                id="msgBadge"
+                style="display: none"
+              ></span>
+            </div>
+          </div>
+          <div class="nav-section">
+            <div class="nav-label">마켓</div>
+            <div class="nav-item" onclick="goScreen('market')">
+              <svg
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+                viewBox="0 0 24 24"
+              >
+                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+                <path
+                  d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"
+                /></svg
+              >중고책 마켓
+            </div>
+          </div>
+          <div class="nav-section">
+            <div class="nav-label">내 정보</div>
+            <div class="nav-item" onclick="goScreen('profile')">
+              <svg
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+                viewBox="0 0 24 24"
+              >
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                <circle cx="12" cy="7" r="4" /></svg
+              >내 프로필
+            </div>
+          </div>
+        </div>
+
+        <div class="main">
+          <!-- 시간표 -->
+          <div class="screen active" id="screen-tt">
+            <div class="tt-wrap">
+              <div class="tt-toolbar">
+                <button class="tt-title-btn" onclick="changeSem(-1)">‹</button>
+                <span class="tt-semester" id="ttSemLabel">2025년 1학기</span>
+                <button class="tt-title-btn" onclick="changeSem(1)">›</button>
+                <span class="tt-stats" id="ttStats"></span>
+                <button
+                  class="btn-gray"
+                  style="margin-left: auto"
+                  onclick="openImportTT()"
+                >
+                  📥 대입하기
+                </button>
+                <button class="btn-red" onclick="openAddClass()">
+                  + 강의 추가
+                </button>
+              </div>
+              <div class="tt-grid-wrap">
+                <div class="tt-grid">
+                  <div class="tt-time-col">
+                    <div class="tt-th-empty"></div>
+                    <div id="ttTimeCells"></div>
+                  </div>
+                  <div class="tt-days" id="ttDayCols"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 게시판 -->
+          <div class="screen" id="screen-board">
+            <div id="boardView"></div>
+          </div>
+
+          <!-- 강의평가 -->
+          <div class="screen" id="screen-review">
+            <div id="reviewView"></div>
+          </div>
+
+          <!-- 쪽지 -->
+          <div class="screen" id="screen-msg">
+            <div class="msg-layout" id="msgLayout">
+              <div class="msg-sidebar">
+                <div class="msg-sidebar-head">
+                  <h3>쪽지함</h3>
+                  <button
+                    class="btn-red"
+                    style="font-size: 12px; padding: 6px 12px"
+                    onclick="openComposeModal()"
+                  >
+                    + 작성
+                  </button>
+                </div>
+                <div class="msg-list-items" id="msgListItems"></div>
+              </div>
+              <div class="msg-main" id="msgMain">
+                <div class="msg-empty-state">
+                  <svg
+                    width="48"
+                    height="48"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"
+                    />
+                    <polyline points="22,6 12,13 2,6" />
+                  </svg>
+                  <p>쪽지를 선택하세요</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 중고책 마켓 -->
+          <div class="screen" id="screen-market">
+            <div id="marketView"></div>
+          </div>
+
+          <!-- 프로필 -->
+          <div class="screen" id="screen-profile">
+            <div id="profileView"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal: Import Timetable -->
+    <div class="modal-bg" id="importTTModal">
+      <div class="modal" style="max-width: 500px">
+        <div class="modal-head">
+          <h3>시간표 대입하기</h3>
+          <button class="modal-close" onclick="closeModal('importTTModal')">
+            ×
+          </button>
+        </div>
+        <div class="modal-body">
+          <p style="font-size: 13px; color: var(--sub); line-height: 1.6">
+            추천 강의를 시간표에 바로 추가하세요.<br />원하는 강의를 선택 후
+            대입 버튼을 누르면 현재 학기에 추가됩니다.
+          </p>
+          <div
+            id="importTTList"
+            style="
+              display: flex;
+              flex-direction: column;
+              gap: 8px;
+              margin-top: 8px;
+              max-height: 340px;
+              overflow-y: auto;
+            "
+          ></div>
+        </div>
+        <div class="form-foot" style="margin-top: 6px">
+          <span
+            id="importSelCount"
+            style="font-size: 13px; color: var(--sub); margin-right: auto"
+            >0개 선택</span
+          >
+          <button class="btn-gray" onclick="closeModal('importTTModal')">
+            취소
+          </button>
+          <button class="btn-red" onclick="confirmImportTT()">대입하기</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal: Add Class -->
+    <div class="modal-bg" id="classModal">
+      <div class="modal" style="max-width: 460px">
+        <div class="modal-head">
+          <h3 id="classModalTitle">강의 추가</h3>
+          <button class="modal-close" onclick="closeModal('classModal')">
+            ×
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="form-row">
+            <label>강의명</label
+            ><input type="text" id="cn" placeholder="예) 자료구조" />
+          </div>
+          <div class="form-row">
+            <label>교수명</label
+            ><input type="text" id="cp" placeholder="예) 김철수" />
+          </div>
+          <div class="form-row">
+            <label>강의실</label
+            ><input type="text" id="cr" placeholder="예) 공학관 301호" />
+          </div>
+          <div class="form-row-2">
+            <div class="form-row">
+              <label>요일</label>
+              <select id="cd">
+                <option value="0">월</option>
+                <option value="1">화</option>
+                <option value="2">수</option>
+                <option value="3">목</option>
+                <option value="4">금</option>
+              </select>
+            </div>
+            <div class="form-row">
+              <label>학점</label>
+              <select id="ccredit">
+                <option value="1">1학점</option>
+                <option value="2">2학점</option>
+                <option value="3">3학점</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row-2">
+            <div class="form-row">
+              <label>시작 시간</label
+              ><select id="cs"></select>
+            </div>
+            <div class="form-row">
+              <label>종료 시간</label
+              ><select id="ce"></select>
+            </div>
+          </div>
+          <div class="form-row">
+            <label>색상</label>
+            <div class="color-picker" id="colorPicker"></div>
+          </div>
+        </div>
+        <div class="form-foot" style="margin-top: 16px">
+          <button
+            class="btn-gray"
+            id="classDeleteBtn"
+            style="display: none; margin-right: auto"
+            onclick="deleteClass()"
+          >
+            삭제
+          </button>
+          <button class="btn-gray" onclick="closeModal('classModal')">
+            취소
+          </button>
+          <button class="btn-red" onclick="saveClass()">저장</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal: Write Post -->
+    <div class="modal-bg" id="writeModal">
+      <div class="modal" style="max-width: 620px">
+        <div class="modal-head">
+          <h3 id="writeModalTitle">게시글 작성</h3>
+          <button class="modal-close" onclick="closeModal('writeModal')">
+            ×
+          </button>
+        </div>
+        <div class="write-form" style="padding: 0; box-shadow: none">
+          <div class="form-row">
+            <label>게시판 선택</label>
+            <div class="write-board-sel" id="writeBoardSel"></div>
+          </div>
+          <div
+            class="form-row"
+            style="flex-direction: row; align-items: center; gap: 12px"
+          >
+            <label style="margin: 0">작성자</label>
+            <div style="display: flex; gap: 6px">
+              <button
+                id="anonBtn"
+                class="author-toggle on"
+                onclick="setWriteAnon(true)"
+              >
+                익명
+              </button>
+              <button
+                id="nickBtn"
+                class="author-toggle"
+                onclick="setWriteAnon(false)"
+              >
+                닉네임
+              </button>
+            </div>
+          </div>
+          <div class="form-row">
+            <label>제목</label
+            ><input
+              type="text"
+              id="postTitle"
+              placeholder="제목을 입력하세요"
+              style="
+                border: 1px solid #e0e0e0;
+                border-radius: 8px;
+                padding: 10px 12px;
+                font-size: 15px;
+              "
+            />
+          </div>
+          <div class="form-row">
+            <label>내용</label
+            ><textarea
+              id="postBody"
+              placeholder="내용을 입력하세요"
+              style="min-height: 160px"
+            ></textarea>
+          </div>
+          <div class="form-row">
+            <label>이미지 첨부 (선택)</label>
+            <div
+              class="img-upload-zone"
+              id="postImgZone"
+              onclick="document.getElementById('postImg').click()"
+              style="height: 100px"
+            >
+              <input
+                type="file"
+                id="postImg"
+                accept="image/*"
+                style="display: none"
+                onchange="previewPostImg(this)"
+              />
+              <span>📷 클릭하여 이미지 첨부</span>
+            </div>
+          </div>
+        </div>
+        <div class="form-foot" style="margin-top: 16px">
+          <button class="btn-gray" onclick="closeModal('writeModal')">
+            취소
+          </button>
+          <button class="btn-red" onclick="submitPost()">등록</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal: Write Review -->
+    <div class="modal-bg" id="reviewModal">
+      <div class="modal" style="max-width: 520px">
+        <div class="modal-head">
+          <h3>강의평가 작성</h3>
+          <button class="modal-close" onclick="closeModal('reviewModal')">
+            ×
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="form-row-2">
+            <div class="form-row">
+              <label>강의명</label
+              ><input type="text" id="rvCourse" placeholder="강의명" />
+            </div>
+            <div class="form-row">
+              <label>교수명</label
+              ><input type="text" id="rvProf" placeholder="교수명" />
+            </div>
+          </div>
+          <div class="form-row-2">
+            <div class="form-row">
+              <label>학과</label
+              ><select id="rvDept">
+                <option>컴퓨터공학부</option>
+                <option>전기전자공학부</option>
+                <option>경영학과</option>
+                <option>경제학과</option>
+                <option>수학과</option>
+                <option>영어영문학과</option>
+                <option>교양</option>
+              </select>
+            </div>
+            <div class="form-row">
+              <label>수강학기</label
+              ><select id="rvSem">
+                <option>2025년 1학기</option>
+                <option>2024년 2학기</option>
+                <option>2024년 1학기</option>
+                <option>2023년 2학기</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <label>별점</label>
+            <div class="star-input" id="starInput">
+              <span class="si" data-v="1" onclick="setStar(1)">★</span>
+              <span class="si" data-v="2" onclick="setStar(2)">★</span>
+              <span class="si" data-v="3" onclick="setStar(3)">★</span>
+              <span class="si" data-v="4" onclick="setStar(4)">★</span>
+              <span class="si" data-v="5" onclick="setStar(5)">★</span>
+            </div>
+          </div>
+          <div class="form-row">
+            <label>평가 내용</label
+            ><textarea
+              id="rvText"
+              placeholder="강의에 대한 솔직한 평가를 남겨주세요"
+              style="min-height: 100px"
+            ></textarea>
+          </div>
+          <div class="form-row-2">
+            <div class="form-row">
+              <label>시험 난이도</label
+              ><select id="rvExam">
+                <option>매우 어려움</option>
+                <option>어려움</option>
+                <option>보통</option>
+                <option>쉬움</option>
+                <option>매우 쉬움</option>
+              </select>
+            </div>
+            <div class="form-row">
+              <label>과제 부담</label
+              ><select id="rvHw">
+                <option>많음</option>
+                <option>보통</option>
+                <option>적음</option>
+                <option>없음</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="form-foot" style="margin-top: 6px">
+          <button class="btn-gray" onclick="closeModal('reviewModal')">
+            취소
+          </button>
+          <button class="btn-red" onclick="submitReview()">등록</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal: Compose Message -->
+    <div class="modal-bg" id="composeModal">
+      <div class="modal" style="max-width: 420px">
+        <div class="modal-head">
+          <h3>쪽지 보내기</h3>
+          <button class="modal-close" onclick="closeModal('composeModal')">
+            ×
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="form-row">
+            <label>받는 사람 아이디</label
+            ><input
+              type="text"
+              id="msgTo"
+              placeholder="상대방 로그인 아이디 입력"
+            />
+          </div>
+          <div
+            class="form-row"
+            style="flex-direction: row; align-items: center; gap: 12px"
+          >
+            <label style="margin: 0">발신자</label>
+            <div style="display: flex; gap: 6px">
+              <button
+                id="msgAnonOff"
+                class="author-toggle on"
+                onclick="setMsgAnon(false)"
+              >
+                내 아이디
+              </button>
+              <button
+                id="msgAnonOn"
+                class="author-toggle"
+                onclick="setMsgAnon(true)"
+              >
+                익명
+              </button>
+            </div>
+            <span style="font-size: 12px; color: #aaa"
+              >익명 선택 시 받는 사람만 발신자 확인 불가</span
+            >
+          </div>
+          <div class="form-row">
+            <label>내용</label
+            ><textarea
+              id="msgContent"
+              placeholder="내용을 입력하세요"
+              style="min-height: 120px"
+            ></textarea>
+          </div>
+        </div>
+        <div class="form-foot" style="margin-top: 6px">
+          <button class="btn-gray" onclick="closeModal('composeModal')">
+            취소
+          </button>
+          <button class="btn-red" onclick="sendMsg()">보내기</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal: Sell Book -->
+    <div class="modal-bg" id="bookModal">
+      <div class="modal" style="max-width: 520px">
+        <div class="modal-head">
+          <h3>책 판매 등록</h3>
+          <button class="modal-close" onclick="closeModal('bookModal')">
+            ×
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="form-row">
+            <label>책 사진</label>
+            <div class="img-upload-zone" id="bookImgZone">
+              <input
+                type="file"
+                id="bookImg"
+                accept="image/*"
+                onchange="previewBookImg(this)"
+              />
+              <span>📚 클릭하여 사진 추가</span>
+            </div>
+          </div>
+          <div class="form-row">
+            <label>책 제목</label
+            ><input type="text" id="bTitle" placeholder="책 제목" />
+          </div>
+          <div class="form-row">
+            <label>저자/출판사</label
+            ><input
+              type="text"
+              id="bAuthor"
+              placeholder="예) 홍길동 / 한빛미디어"
+            />
+          </div>
+          <div class="form-row-2">
+            <div class="form-row">
+              <label>정가 (원)</label
+              ><input type="number" id="bOrigPrice" placeholder="0" />
+            </div>
+            <div class="form-row">
+              <label>판매가 (원)</label
+              ><input type="number" id="bPrice" placeholder="0" />
+            </div>
+          </div>
+          <div class="form-row">
+            <label>상태</label>
+            <div class="cond-sel">
+              <button class="cond-btn on" data-c="S" onclick="setCond(this)">
+                S (최상)
+              </button>
+              <button class="cond-btn" data-c="A" onclick="setCond(this)">
+                A (상)
+              </button>
+              <button class="cond-btn" data-c="B" onclick="setCond(this)">
+                B (중)
+              </button>
+              <button class="cond-btn" data-c="C" onclick="setCond(this)">
+                C (하)
+              </button>
+            </div>
+          </div>
+          <div class="form-row">
+            <label>설명</label
+            ><textarea
+              id="bDesc"
+              placeholder="책 상태, 필기 여부 등을 적어주세요"
+              style="min-height: 80px"
+            ></textarea>
+          </div>
+        </div>
+        <div class="form-foot" style="margin-top: 6px">
+          <button class="btn-gray" onclick="closeModal('bookModal')">
+            취소
+          </button>
+          <button class="btn-red" onclick="submitBook()">등록</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal: Edit Profile -->
+    <div class="modal-bg" id="profileModal">
+      <div class="modal" style="max-width: 420px">
+        <div class="modal-head">
+          <h3>프로필 수정</h3>
+          <button class="modal-close" onclick="closeModal('profileModal')">
+            ×
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="form-row">
+            <label>닉네임</label
+            ><input type="text" id="editName" placeholder="닉네임" />
+          </div>
+          <div class="form-row">
+            <label>학과</label
+            ><select id="editDept">
+              <option value="">미설정</option>
+              <option>컴퓨터공학부</option>
+              <option>전기전자공학부</option>
+              <option>경영학과</option>
+              <option>경제학과</option>
+              <option>수학과</option>
+              <option>영어영문학과</option>
+            </select>
+          </div>
+          <div class="form-row">
+            <label>학번</label
+            ><select id="editYear">
+              <option value="">미설정</option>
+              <option>20학번</option>
+              <option>21학번</option>
+              <option>22학번</option>
+              <option>23학번</option>
+              <option>24학번</option>
+              <option>25학번</option>
+            </select>
+          </div>
+          <div class="form-row">
+            <label>MBTI</label
+            ><select id="editMbti">
+              <option value="">미설정</option>
+              <option>INTJ</option>
+              <option>INTP</option>
+              <option>ENTJ</option>
+              <option>ENTP</option>
+              <option>INFJ</option>
+              <option>INFP</option>
+              <option>ENFJ</option>
+              <option>ENFP</option>
+              <option>ISTJ</option>
+              <option>ISFJ</option>
+              <option>ESTJ</option>
+              <option>ESFJ</option>
+              <option>ISTP</option>
+              <option>ISFP</option>
+              <option>ESTP</option>
+              <option>ESFP</option>
+            </select>
+          </div>
+          <div class="form-row">
+            <label>비밀번호 변경 (선택)</label
+            ><input
+              type="password"
+              id="editPw"
+              placeholder="새 비밀번호 (변경 시만 입력)"
+            />
+          </div>
+        </div>
+        <div class="form-foot" style="margin-top: 6px">
+          <button class="btn-gray" onclick="closeModal('profileModal')">
+            취소
+          </button>
+          <button class="btn-red" onclick="saveProfile()">저장</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+  </body>
+</html>
