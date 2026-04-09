@@ -30,7 +30,9 @@
         border-radius: 12px;
         box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
         text-align: center;
-        width: 400px;
+        /* width: 400px; 를 아래와 같이 수정 */
+        width: fit-content;
+        margin: auto;
       }
 
       .header h1 {
@@ -143,7 +145,7 @@
 
       <div class="action-btns">
         <button class="btn" onclick="useHint()" id="hint-btn">힌트 (3)</button>
-        <button class="btn" onclick="checkErrors()">오류체크</button>
+        <button class="btn" onclick="checkErrors()">중복체크</button>
         <button class="btn" onclick="submitAnswer()">정답제출</button>
       </div>
 
@@ -359,15 +361,63 @@
       }
 
       function submitAnswer() {
+        let isComplete = true;
+        let isCorrect = true;
+
+        // 1. 모든 칸이 채워졌는지 확인
         for (let r = 0; r < 9; r++) {
           for (let c = 0; c < 9; c++) {
-            if (displayBoard[r][c] !== solution[r][c]) {
-              alert("땡~ 다시도전!");
-              return;
+            if (displayBoard[r][c] === 0) {
+              isComplete = false;
+              break;
             }
           }
         }
-        alert("성공~ 다음 난이도 도전!");
+
+        if (!isComplete) {
+          alert("아직 채워지지 않은 칸이 있습니다!");
+          return;
+        }
+
+        // 2. 중복이 있는지(규칙 위반) 최종 확인
+        // 기존에 만든 checkErrors의 로직을 활용합니다.
+        let hasError = false;
+        for (let r = 0; r < 9; r++) {
+          for (let c = 0; c < 9; c++) {
+            let val = displayBoard[r][c];
+            // 가로, 세로, 블록 중복 체크
+            if (!isValidFinal(displayBoard, r, c, val)) {
+              hasError = true;
+              break;
+            }
+          }
+          if (hasError) break;
+        }
+
+        if (hasError) {
+          alert("땡~ 다시도전! (중복된 숫자가 있거나 규칙에 맞지 않습니다.)");
+        } else {
+          alert("성공~ 다음 난이도 도전!");
+        }
+      }
+
+      // 최종 확인용 유효성 검사 함수 (자기 자신 제외하고 체크)
+      function isValidFinal(board, r, c, n) {
+        for (let i = 0; i < 9; i++) {
+          if (i !== c && board[r][i] === n) return false;
+          if (i !== r && board[i][c] === n) return false;
+        }
+        let rr = Math.floor(r / 3) * 3,
+          cc = Math.floor(c / 3) * 3;
+        for (let i = 0; i < 3; i++) {
+          for (let j = 0; j < 3; j++) {
+            let curR = rr + i,
+              curC = cc + j;
+            if ((curR !== r || curC !== c) && board[curR][curC] === n)
+              return false;
+          }
+        }
+        return true;
       }
 
       newGame("보통");
